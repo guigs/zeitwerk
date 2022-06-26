@@ -12,4 +12,10 @@ module Zeitwerk
 
   class NameError < ::NameError
   end
+
+  class LibNotFound < Error
+    def initialize(root_file)
+      super("Gem lib directory not found for #{root_file}")
+    end
+  end
 end

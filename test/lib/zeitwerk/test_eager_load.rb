@@ -110,7 +110,7 @@ class TestEagerLoad < LoaderTest
     $my_gem_foo_bar_eager_loaded = false
 
     files = [
-      ["my_gem.rb", <<-EOS],
+      ["lib/my_gem.rb", <<-EOS],
         $for_gem_test_loader = Zeitwerk::Loader.for_gem
         $for_gem_test_loader.setup
 
@@ -120,13 +120,13 @@ class TestEagerLoad < LoaderTest
 
         $for_gem_test_loader.eager_load
       EOS
-      ["my_gem/foo.rb", "class MyGem::Foo; end"],
-      ["my_gem/foo/bar.rb", "class MyGem::Foo::Bar; end; $my_gem_foo_bar_eager_loaded = true"],
-      ["my_gem/foo/baz.rb", "class MyGem::Foo::Baz; end"],
+      ["lib/my_gem/foo.rb", "class MyGem::Foo; end"],
+      ["lib/my_gem/foo/bar.rb", "class MyGem::Foo::Bar; end; $my_gem_foo_bar_eager_loaded = true"],
+      ["lib/my_gem/foo/baz.rb", "class MyGem::Foo::Baz; end"],
     ]
 
     with_files(files) do
-      with_load_path(".") do
+      with_load_path("lib") do
         require "my_gem"
         assert $my_gem_foo_bar_eager_loaded
       end

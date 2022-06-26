@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "pathname"
+
 module Zeitwerk
   # @private
   class GemLoader < Loader
@@ -17,11 +19,19 @@ module Zeitwerk
     def initialize(root_file, warn_on_extra_files:)
       super()
 
-      @tag                 = File.basename(root_file, ".rb")
-      @inflector           = GemInflector.new(root_file)
       @root_file           = File.expand_path(root_file)
-      @lib                 = File.dirname(root_file)
+      @lib, @namespaces    = find_lib
+      @inflector           = GemInflector.new(@root_file)
       @warn_on_extra_files = warn_on_extra_files
+
+      @tag = File.basename(@root_file, ".rb")
+      if @namespaces.any?
+        @tag = [*@namespaces, @tag].join('-')
+        optional_top_level_entrypoint = File.join(@lib, "#{@tag}.rb")
+        if File.exist?(optional_top_level_entrypoint)
+          ignore(optional_top_level_entrypoint)
+        end
+      end
 
       push_dir(@lib)
     end
@@ -34,9 +44,28 @@ module Zeitwerk
 
     private
 
+    def find_lib
+      namespaces = []
+
+      Pathname.new(File.dirname(@root_file)).ascend do |dir|
+        basename = dir.basename.to_s
+        if basename == "lib"
+          return [dir.to_s, namespaces]
+        else
+          namespaces.unshift(basename)
+        end
+      end
+
+      raise Zeitwerk::LibNotFound.new(@root_file)
+    end
+
     # @sig () -> void
     def warn_on_extra_files
-      expected_namespace_dir = @root_file.delete_suffix(".rb")
+      expected_namespace_dir = if @namespaces.empty?
+        @root_file.delete_suffix(".rb")
+      else
+        File.join(@lib, @namespaces[0])
+      end
 
       ls(@lib) do |basename, abspath|
         next if abspath == @root_file
