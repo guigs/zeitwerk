@@ -14,7 +14,7 @@ module Zeitwerk
       #
       # @private
       # @sig Hash[String, Zeitwerk::Loader]
-      attr_reader :gem_loaders_by_root_file
+      attr_reader :gem_loaders_by_entry_point
 
       # Maps absolute paths to the loaders responsible for them.
       #
@@ -76,7 +76,7 @@ module Zeitwerk
       # @sig (Zeitwerk::Loader) -> void
       def unregister_loader(loader)
         loaders.delete(loader)
-        gem_loaders_by_root_file.delete_if { |_, l| l == loader }
+        gem_loaders_by_entry_point.delete_if { |_, l| l == loader }
         autoloads.delete_if { |_, l| l == loader }
         inceptions.delete_if { |_, (_, l)| l == loader }
       end
@@ -86,8 +86,8 @@ module Zeitwerk
       #
       # @private
       # @sig (String) -> Zeitwerk::Loader
-      def loader_for_gem(root_file, warn_on_extra_files:)
-        gem_loaders_by_root_file[root_file] ||= GemLoader._new(root_file, warn_on_extra_files: warn_on_extra_files)
+      def loader_for_gem(entry_point, warn_on_extra_files:)
+        gem_loaders_by_entry_point[entry_point] ||= GemLoader._new(entry_point, warn_on_extra_files: warn_on_extra_files)
       end
 
       # @private
@@ -130,9 +130,9 @@ module Zeitwerk
       end
     end
 
-    @loaders                  = []
-    @gem_loaders_by_root_file = {}
-    @autoloads                = {}
-    @inceptions               = {}
+    @loaders                    = []
+    @gem_loaders_by_entry_point = {}
+    @autoloads                  = {}
+    @inceptions                 = {}
   end
 end

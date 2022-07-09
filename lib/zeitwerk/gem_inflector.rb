@@ -3,9 +3,9 @@
 module Zeitwerk
   class GemInflector < Inflector
     # @sig (String) -> void
-    def initialize(root_file)
-      namespace     = File.basename(root_file, ".rb")
-      parent_dir    = File.dirname(root_file)
+    def initialize(entry_point)
+      namespace     = File.basename(entry_point, ".rb")
+      parent_dir    = File.dirname(entry_point)
       @version_file = File.join(parent_dir, namespace, "version.rb")
     end
 

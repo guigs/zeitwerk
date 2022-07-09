@@ -31,7 +31,7 @@ class LoaderTest < Minitest::Test
 
   def reset_registry
     Zeitwerk::Registry.loaders.clear
-    Zeitwerk::Registry.gem_loaders_by_root_file.clear
+    Zeitwerk::Registry.gem_loaders_by_entry_point.clear
     Zeitwerk::Registry.autoloads.clear
     Zeitwerk::Registry.inceptions.clear
   end

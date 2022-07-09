@@ -11,20 +11,20 @@ module Zeitwerk
 
     # @private
     # @sig (String, bool) -> Zeitwerk::GemLoader
-    def self._new(root_file, warn_on_extra_files:)
-      new(root_file, warn_on_extra_files: warn_on_extra_files)
+    def self._new(entry_point, warn_on_extra_files:)
+      new(entry_point, warn_on_extra_files: warn_on_extra_files)
     end
 
     # @sig (String, bool) -> void
-    def initialize(root_file, warn_on_extra_files:)
+    def initialize(entry_point, warn_on_extra_files:)
       super()
 
-      @root_file           = File.expand_path(root_file)
+      @entry_point         = File.expand_path(entry_point)
       @lib, @namespaces    = find_lib
-      @inflector           = GemInflector.new(@root_file)
+      @inflector           = GemInflector.new(@entry_point)
       @warn_on_extra_files = warn_on_extra_files
 
-      @tag = File.basename(@root_file, ".rb")
+      @tag = File.basename(@entry_point, ".rb")
       if @namespaces.any?
         @tag = [*@namespaces, @tag].join('-')
         ensure_namespaces_are_already_defined
@@ -48,7 +48,7 @@ module Zeitwerk
     def find_lib
       namespaces = []
 
-      Pathname.new(File.dirname(@root_file)).ascend do |dir|
+      Pathname.new(File.dirname(@entry_point)).ascend do |dir|
         basename = dir.basename.to_s
         if basename == "lib"
           return [dir.to_s, namespaces]
@@ -57,7 +57,7 @@ module Zeitwerk
         end
       end
 
-      raise Zeitwerk::LibNotFound.new(@root_file)
+      raise Zeitwerk::LibNotFound.new(@entry_point)
     end
 
     def ensure_namespaces_are_already_defined
@@ -81,13 +81,13 @@ module Zeitwerk
     # @sig () -> void
     def warn_on_extra_files
       expected_namespace_dir = if @namespaces.empty?
-        @root_file.delete_suffix(".rb")
+        @entry_point.delete_suffix(".rb")
       else
         File.join(@lib, @namespaces[0])
       end
 
       ls(@lib) do |basename, abspath|
-        next if abspath == @root_file
+        next if abspath == @entry_point
         next if abspath == expected_namespace_dir
 
         basename_without_ext = basename.delete_suffix(".rb")

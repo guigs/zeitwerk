@@ -14,8 +14,8 @@ module Zeitwerk
   end
 
   class LibNotFound < Error
-    def initialize(root_file)
-      super("Gem lib directory not found for #{root_file}")
+    def initialize(entry_point)
+      super("Gem lib directory not found for #{entry_point}")
     end
   end
 
