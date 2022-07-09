@@ -27,6 +27,7 @@ module Zeitwerk
       @tag = File.basename(@root_file, ".rb")
       if @namespaces.any?
         @tag = [*@namespaces, @tag].join('-')
+        ensure_namespaces_are_already_defined
         optional_top_level_entrypoint = File.join(@lib, "#{@tag}.rb")
         if File.exist?(optional_top_level_entrypoint)
           ignore(optional_top_level_entrypoint)
@@ -57,6 +58,24 @@ module Zeitwerk
       end
 
       raise Zeitwerk::LibNotFound.new(@root_file)
+    end
+
+    def ensure_namespaces_are_already_defined
+      dir = @lib
+      parent = Object
+      @namespaces.each do |namespace|
+        dir = File.join(dir, namespace)
+        cname = @inflector.camelize(namespace, dir).to_sym
+        begin
+          parent = cget(parent, cname)
+        rescue ::NameError => e
+          if e.receiver == parent && e.name == cname
+            raise Zeitwerk::NamespaceNotFound.new(cpath(parent, cname))
+          else
+            raise
+          end
+        end
+      end
     end
 
     # @sig () -> void

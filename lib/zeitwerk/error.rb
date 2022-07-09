@@ -18,4 +18,14 @@ module Zeitwerk
       super("Gem lib directory not found for #{root_file}")
     end
   end
+
+  class NamespaceNotFound < Error
+    def initialize(namespace)
+      super(<<~MSG)
+        The namespace #{namespace} was not found. Please load it before
+        setting up Zeitwerk. That way we make sure the gem reopens it, instead of
+        creating it.
+      MSG
+    end
+  end
 end

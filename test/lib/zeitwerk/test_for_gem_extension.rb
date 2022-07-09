@@ -32,7 +32,7 @@ class TestForGemExtension < LoaderTest
 
   def teardown
     super
-    remove_const :Ns1
+    remove_const :Ns1 if Object.const_defined?(:Ns1)
   end
 
   test "sets things correctly" do
@@ -226,7 +226,7 @@ class TestForGemExtension < LoaderTest
   test "does not warn if lib has an extra directory, but warnings are disabled" do
     files = [["lib/ns1/ns2/my_gem.rb", <<~EOS], ["lib/foo/bar.rb", "Foo::Bar = true"]]
       module Ns1
-        module Ns1
+        module Ns2
         end
       end
 
@@ -301,5 +301,32 @@ class TestForGemExtension < LoaderTest
       with_my_gem_extension(files, load_path: ".")
     end
     assert_match %r/\AGem lib directory not found for .*my_gem.rb\z/, e.message
+  end
+
+  test "raises if the extended namespace is not already defined" do
+    files = [["lib/ns1/ns2/my_gem.rb", <<~EOS]]
+      Zeitwerk::Loader.for_gem.setup
+    EOS
+    with_my_gem_extension(files, rq: false) do
+      e = assert_raises(Zeitwerk::NamespaceNotFound) do
+        assert require("ns1/ns2/my_gem")
+      end
+      assert_includes e.message, "The namespace Ns1 was not found."
+    end
+  end
+
+  test "raises if the extended namespace is not already defined" do
+    files = [["lib/ns1/ns2/my_gem.rb", <<~EOS]]
+      module Ns1
+      end
+
+      Zeitwerk::Loader.for_gem.setup
+    EOS
+    with_my_gem_extension(files, rq: false) do
+      e = assert_raises(Zeitwerk::NamespaceNotFound) do
+        assert require("ns1/ns2/my_gem")
+      end
+      assert_includes e.message, "The namespace Ns1::Ns2 was not found."
+    end
   end
 end
