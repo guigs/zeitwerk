@@ -23,8 +23,8 @@ module Zeitwerk
       @lib, @namespaces    = find_lib
       @inflector           = GemInflector.new(@entry_point)
       @warn_on_extra_files = warn_on_extra_files
+      @tag                 = File.basename(@entry_point, ".rb")
 
-      @tag = File.basename(@entry_point, ".rb")
       if @namespaces.any?
         @tag = [*@namespaces, @tag].join('-')
         ensure_namespaces_are_already_defined
